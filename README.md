@@ -4,7 +4,7 @@ A powerful web-based tool for generating realistic observability data (APM trace
 
 ![Version](https://img.shields.io/badge/version-2.0-blue)
 ![Python](https://img.shields.io/badge/python-3.7+-green)
-![License](https://img.shields.io/badge/license-MIT-orange)
+
 
 ## ✨ Features
 
