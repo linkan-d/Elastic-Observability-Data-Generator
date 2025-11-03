@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Elastic Observability Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #718096;
+            font-size: 1.1em;
+        }
+        
+        .header .version {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .status-badge.connected { background: #c6f6d5; color: #22543d; }
+        .status-badge.disconnected { background: #fed7d7; color: #742a2a; }
+        
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .form-section h2 {
+            color: #2d3748;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .industry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .industry-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .industry-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .industry-card.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+        
+        .industry-card .icon { font-size: 2.5em; margin-bottom: 10px; }
+        .industry-card .name { font-weight: 600; font-size: 1.1em; }
+        .industry-card .count { font-size: 0.85em; opacity: 0.8; }
+        
+        .scenario-list {
+            display: grid;
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .scenario-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .scenario-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .scenario-card.selected {
+            background: #eef2ff;
+            border-color: #667eea;
+            border-width: 3px;
+        }
+        
+        .scenario-card .title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .scenario-card .description {
+            color: #718096;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+        
+        .scenario-card .story {
+            background: #fef5e7;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #856404;
+            font-style: italic;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input { opacity: 0; width: 0; height: 0; }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider { background-color: #667eea; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        
+        .btn {
+            width: 100%;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .btn-danger {
+            background: #f56565;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        
+        .progress-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+        
+        .progress-section.active { display: block; }
+        
+        /* Demo Story Panel Styles */
+        .demo-story-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .demo-story-panel h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-story-panel .story-content {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            line-height: 1.6;
+            font-size: 1.05em;
+        }
+        
+        .metrics-highlight {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .metric-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-badge .label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .metric-badge .value {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+        .demo-script {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .demo-script h4 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .demo-script ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .demo-script li {
+            margin-bottom: 8px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-card .label {
+            color: #718096;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .log {
+            background: #1a202c;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .help-text {
+            color: #718096;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #3182ce;
+        }
+        
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #38a169;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Feedback Button */
+        .feedback-section {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feedback-section p {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        
+        .feedback-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .feedback-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .creator-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        .creator-badge strong {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Advanced Elastic Observability Generator</h1>
+            <p class="subtitle">LLM-Enhanced Data with Demo Scenarios</p>
+            <span class="version">v2.1 - With Demo Stories</span>
+            <br>
+            <span class="status-badge disconnected" id="status">⚠️ Not Connected</span>
+        </div>
+
+        <!-- Step 1: Elasticsearch Connection -->
+        <div class="form-section" id="connectionSection">
+            <h2>🔌 Step 1: Connect to Elasticsearch</h2>
+            
+            <div class="form-group">
+                <label for="cloudId">Cloud ID *</label>
+                <input type="text" id="cloudId" placeholder="deployment:dXMt...">
+                <div class="help-text">From Elastic Cloud deployment page</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="apiKey">API Key *</label>
+                <input type="password" id="apiKey" placeholder="Your API Key">
+                <div class="help-text">Needs write access to apm-*, logs-*, synthetics-*</div>
+            </div>
+            
+            <button class="btn btn-primary" id="connectBtn">🔗 Connect to Elasticsearch</button>
+        </div>
+
+        <!-- Step 2: LLM Configuration -->
+        <div class="form-section hidden" id="llmSection">
+            <h2>🤖 Step 2: LLM Configuration (Optional)</h2>
+            
+            <div class="alert alert-info">
+                <strong>💡 LLM Benefits:</strong> More realistic error messages, varied log content, scenario-aware data patterns.
+                <br><strong>Note:</strong> Works fine without LLM using smart templates!
+            </div>
+            
+            <div class="toggle-switch" style="margin-bottom: 20px;">
+                <label class="switch">
+                    <input type="checkbox" id="llmEnabled">
+                    <span class="slider"></span>
+                </label>
+                <label for="llmEnabled" style="cursor: pointer;">Enable LLM Integration</label>
+            </div>
+            
+            <div id="llmConfig" class="hidden">
+                <div class="form-group">
+                    <label for="llmProvider">LLM Provider</label>
+                    <select id="llmProvider">
+                        <option value="openai">OpenAI (GPT-3.5/4)</option>
+                        <option value="anthropic">Anthropic (Claude)</option>
+                        <option value="ollama">Ollama (Local - Free)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="apiKeyGroup">
+                    <label for="llmApiKey">API Key</label>
+                    <input type="password" id="llmApiKey" placeholder="sk-...">
+                    <div class="help-text">Not needed for Ollama (local)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Industry Selection -->
+        <div class="form-section hidden" id="industrySection">
+            <h2>🏭 Step 3: Select Industry</h2>
+            <div class="industry-grid" id="industryGrid"></div>
+        </div>
+
+        <!-- Step 4: Scenario Selection -->
+        <div class="form-section hidden" id="scenarioSection">
+            <h2>🎬 Step 4: Select Demo Scenario</h2>
+            <div class="alert alert-info">
+                <strong>💡 Tip:</strong> Scenarios simulate real-world issues like traffic spikes, outages, and performance degradation.
+            </div>
+            <div class="scenario-list" id="scenarioList"></div>
+        </div>
+
+        <!-- Step 5: Configuration -->
+        <div class="form-section hidden" id="configSection">
+            <h2>⚙️ Step 5: Configure Generation</h2>
+            
+            <div class="form-group">
+                <label for="duration">Duration (minutes)</label>
+                <input type="number" id="duration" value="10" min="1" max="60">
+                <div class="help-text">How long to generate data</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="rate">Data Rate</label>
+                <select id="rate">
+                    <option value="5">Low (5 events/sec) - Light demo</option>
+                    <option value="17" selected>Medium (17 events/sec) - Recommended</option>
+                    <option value="50">High (50 events/sec) - Load testing</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary" id="startBtn">🚀 Start Generating Data</button>
+        </div>
+
+        <!-- Progress Section with Demo Story -->
+        <div class="progress-section" id="progressSection">
+            <h2>📊 Generation Progress</h2>
+            
+            <!-- Demo Story Panel - NEW! -->
+            <div class="demo-story-panel" id="demoStoryPanel">
+                <h3>🎬 <span id="storyTitle">Demo Scenario</span></h3>
+                <div class="story-content" id="storyContent">
+                    Starting data generation...
+                </div>
+                
+                <div class="metrics-highlight" id="scenarioMetrics">
+                    <!-- Metrics will be populated by JavaScript -->
+                </div>
+                
+                <div class="demo-script" id="demoScript">
+                    <h4>💬 Demo Talking Points:</h4>
+                    <ul id="talkingPoints">
+                        <!-- Talking points will be populated by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%;">0%</div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="value" id="tracesCount">0</div>
+                    <div class="label">APM Traces</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="logsCount">0</div>
+                    <div class="label">Log Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="syntheticsCount">0</div>
+                    <div class="label">Synthetic Checks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="elapsedTime">0s</div>
+                    <div class="label">Elapsed Time</div>
+                </div>
+            </div>
+            
+            <div class="alert alert-success">
+                <strong>✅ Data is being generated!</strong><br>
+                Open Kibana → Observability → APM → Service Map to see your services appear (wait 1-2 minutes for indexing).
+            </div>
+            
+            <button class="btn btn-danger" id="stopBtn">⏹️ Stop Generation</button>
+            
+            <div class="log" id="logOutput">
+                <div>🚀 Waiting for generation to start...</div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="feedback-section" style="margin-top: 30px;">
+            <p style="font-size: 0.9em; color: #4a5568;">
+                🛠️ <strong>Built by Linkan Dash</strong> - Solutions Architect @ Elastic
+            </p>
+            <p style="font-size: 0.85em; color: #718096; margin-top: 8px;">
+                Questions, feedback, or feature requests? Reach out anytime!
+            </p>
+            <div style="margin-top: 12px;">
+                <a href="mailto:linkan.dash@elastic.co?subject=Observability Generator Feedback&body=Hi Linkan,%0D%0A%0D%0AI have feedback about the Observability Data Generator:%0D%0A%0D%0A" 
+                   class="feedback-btn" style="margin: 0 5px;">
+                    📧 Email
+                </a>
+                <a href="https://elastic.slack.com/team/linkan.dash" 
+                   target="_blank" 
+                   class="feedback-btn" 
+                   style="margin: 0 5px; background: #4A154B;">
+                    💬 Slack
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedIndustry = null;
+        let selectedScenario = null;
+        let selectedScenarioDetails = null;
+        let isGenerating = false;
+        let statsInterval = null;
+
+        // Connect to Elasticsearch
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            const cloudId = document.getElementById('cloudId').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!cloudId || !apiKey) {
+                alert('Please enter both Cloud ID and API Key');
+                return;
+            }
+            
+            document.getElementById('connectBtn').disabled = true;
+            document.getElementById('connectBtn').textContent = '🔄 Connecting...';
+            
+            try {
+                const response = await fetch('/api/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cloud_id: cloudId, api_key: apiKey })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('status').textContent = '✅ Connected: ' + data.cluster_name;
+                    document.getElementById('status').className = 'status-badge connected';
+                    document.getElementById('connectionSection').classList.add('hidden');
+                    document.getElementById('llmSection').classList.remove('hidden');
+                    document.getElementById('industrySection').classList.remove('hidden');
+                    loadIndustries();
+                } else {
+                    alert('Connection failed: ' + data.error);
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('connectBtn').textContent = '🔗 Connect to Elasticsearch';
+                }
+            } catch (error) {
+                alert('Connection error: ' + error.message);
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('connectBtn').textContent = '🔗 Connect to Elasticsearch';
+            }
+        });
+
+        // LLM Toggle
+        document.getElementById('llmEnabled').addEventListener('change', (e) => {
+            document.getElementById('llmConfig').classList.toggle('hidden', !e.target.checked);
+        });
+
+        // Load industries
+        async function loadIndustries() {
+            try {
+                const response = await fetch('/api/industries');
+                const industries = await response.json();
+                
+                const grid = document.getElementById('industryGrid');
+                grid.innerHTML = '';
+                
+                for (const [key, industry] of Object.entries(industries)) {
+                    const card = document.createElement('div');
+                    card.className = 'industry-card';
+                    card.innerHTML = `
+                        <div class="icon">${industry.icon}</div>
+                        <div class="name">${industry.name}</div>
+                        <div class="count">${industry.service_count} services</div>
+                    `;
+                    card.addEventListener('click', () => selectIndustry(key, card));
+                    grid.appendChild(card);
+                }
+            } catch (error) {
+                console.error('Failed to load industries:', error);
+            }
+        }
+
+        function selectIndustry(key, card) {
+            document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedIndustry = key;
+            
+            document.getElementById('scenarioSection').classList.remove('hidden');
+            document.getElementById('configSection').classList.remove('hidden');
+            loadScenarios(key);
+        }
+
+        async function loadScenarios(industry) {
+            try {
+                const response = await fetch(`/api/scenarios?industry=${industry}`);
+                const scenarios = await response.json();
+                
+                const list = document.getElementById('scenarioList');
+                list.innerHTML = '';
+                
+                // Add "normal operations" option first
+                const normalCard = document.createElement('div');
+                normalCard.className = 'scenario-card';
+                normalCard.innerHTML = `
+                    <div class="title">✅ Normal Operations</div>
+                    <div class="description">Standard operations with baseline performance (2% error rate)</div>
+                `;
+                normalCard.addEventListener('click', () => selectScenario(null, normalCard, {
+                    title: 'Normal Operations',
+                    description: 'Standard operations with baseline performance',
+                    story: 'Baseline performance with typical traffic patterns. Error rate: 2%, Normal latency.'
+                }));
+                list.appendChild(normalCard);
+                
+                // Add scenarios
+                for (const [key, scenario] of Object.entries(scenarios)) {
+                    const card = document.createElement('div');
+                    card.className = 'scenario-card';
+                    card.innerHTML = `
+                        <div class="title">${scenario.name}</div>
+                        <div class="description">${scenario.description}</div>
+                        ${scenario.story ? `<div class="story">📖 ${scenario.story}</div>` : ''}
+                    `;
+                    card.addEventListener('click', () => selectScenario(key, card, {
+                        key: key,
+                        title: scenario.name,
+                        description: scenario.description,
+                        story: scenario.story || scenario.description
+                    }));
+                    list.appendChild(card);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load scenarios:', error);
+            }
+        }
+
+        function selectScenario(key, card, details) {
+            document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedScenario = key;
+            selectedScenarioDetails = details;
+        }
+
+        // Start generation
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            if (!selectedIndustry) {
+                alert('Please select an industry');
+                return;
+            }
+            
+            const duration = parseInt(document.getElementById('duration').value);
+            const rate = parseInt(document.getElementById('rate').value);
+            const llmEnabled = document.getElementById('llmEnabled').checked;
+            const llmProvider = document.getElementById('llmProvider').value;
+            const llmApiKey = document.getElementById('llmApiKey').value;
+            
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        industry: selectedIndustry,
+                        scenario: selectedScenario,
+                        duration: duration,
+                        rate: rate,
+                        use_llm: llmEnabled,
+                        llm_provider: llmProvider,
+                        llm_api_key: llmApiKey
+                    })
+                });
+                
+                if (response.ok) {
+                    isGenerating = true;
+                    document.getElementById('progressSection').classList.add('active');
+                    document.getElementById('configSection').classList.add('hidden');
+                    document.getElementById('scenarioSection').classList.add('hidden');
+                    document.getElementById('industrySection').classList.add('hidden');
+                    document.getElementById('llmSection').classList.add('hidden');
+                    
+                    // Update demo story panel
+                    updateDemoStory();
+                    
+                    startStatsPolling();
+                } else {
+                    const data = await response.json();
+                    alert('Failed to start generation: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        // Stop generation
+        document.getElementById('stopBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/stop', { method: 'POST' });
+                stopStatsPolling();
+                isGenerating = false;
+                
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } catch (error) {
+                console.error('Error stopping generation:', error);
+            }
+        });
+
+        function startStatsPolling() {
+            statsInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/stats');
+                    const stats = await response.json();
+                    
+                    document.getElementById('tracesCount').textContent = stats.traces.toLocaleString();
+                    document.getElementById('logsCount').textContent = stats.logs.toLocaleString();
+                    document.getElementById('syntheticsCount').textContent = stats.synthetics.toLocaleString();
+                    document.getElementById('elapsedTime').textContent = stats.elapsed_seconds + 's';
+                    
+                    const duration = parseInt(document.getElementById('duration').value) * 60;
+                    const progress = Math.min(100, (stats.elapsed_seconds / duration) * 100);
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressBar').textContent = Math.round(progress) + '%';
+                    
+                    // Update log
+                    const log = document.getElementById('logOutput');
+                    log.innerHTML = `
+                        <div>🎯 Industry: ${selectedIndustry}</div>
+                        <div>🎬 Scenario: ${selectedScenarioDetails?.title || 'Normal Operations'}</div>
+                        <div>📊 Rate: ${stats.traces_per_second.toFixed(1)} traces/sec</div>
+                        <div>⏱️ Elapsed: ${stats.elapsed_seconds}s</div>
+                        <div>✅ Total Events: ${(stats.traces + stats.logs + stats.synthetics).toLocaleString()}</div>
+                    `;
+                    
+                    if (progress >= 100) {
+                        stopStatsPolling();
+                    }
+                } catch (error) {
+                    console.error('Error fetching stats:', error);
+                }
+            }, 1000);
+        }
+
+        function stopStatsPolling() {
+            if (statsInterval) {
+                clearInterval(statsInterval);
+                statsInterval = null;
+            }
+        }
+
+        function updateDemoStory() {
+            const details = selectedScenarioDetails;
+            
+            if (!details || !selectedScenario) {
+                // Normal operations
+                document.getElementById('storyTitle').textContent = 'Normal Operations';
+                document.getElementById('storyContent').textContent = 
+                    `Generating baseline data for your ${selectedIndustry} platform. All services running normally with typical traffic patterns, 2% error rate, and normal latency.`;
+                
+                document.getElementById('scenarioMetrics').innerHTML = `
+                    <div class="metric-badge">
+                        <div class="label">Error Rate</div>
+                        <div class="value">2%</div>
+                    </div>
+                    <div class="metric-badge">
+                        <div class="label">Latency</div>
+                        <div class="value">Normal</div>
+                    </div>
+                    <div class="metric-badge">
+                        <div class="label">Traffic</div>
+                        <div class="value">Baseline</div>
+                    </div>
+                    <div class="metric-badge">
+                        <div class="label">Services</div>
+                        <div class="value">${getServiceCount()}</div>
+                    </div>
+                `;
+                
+                document.getElementById('talkingPoints').innerHTML = `
+                    <li>"This is our ${selectedIndustry} platform running under normal conditions"</li>
+                    <li>"We have ${getServiceCount()} microservices communicating via REST APIs"</li>
+                    <li>"Notice the Service Map shows the complete architecture and dependencies"</li>
+                    <li>"You can see throughput, latency, and error rates for each service"</li>
+                    <li>"Let's drill into a trace to see the complete request flow..."</li>
+                `;
+                return;
+            }
+            
+            // Scenario selected
+            document.getElementById('storyTitle').textContent = details.title;
+            document.getElementById('storyContent').textContent = details.story;
+            
+            // Get metrics for this scenario
+            const metrics = getScenarioMetrics(details.key);
+            document.getElementById('scenarioMetrics').innerHTML = `
+                <div class="metric-badge">
+                    <div class="label">Error Rate</div>
+                    <div class="value">${metrics.errorRate}</div>
+                </div>
+                <div class="metric-badge">
+                    <div class="label">Latency</div>
+                    <div class="value">${metrics.latency}</div>
+                </div>
+                <div class="metric-badge">
+                    <div class="label">Affected Services</div>
+                    <div class="value">${metrics.affectedServices}</div>
+                </div>
+                <div class="metric-badge">
+                    <div class="label">Duration</div>
+                    <div class="value">${metrics.duration}</div>
+                </div>
+            `;
+            
+            // Generate talking points
+            const script = getDemoScript(details);
+            document.getElementById('talkingPoints').innerHTML = script;
+        }
+        
+        function getScenarioMetrics(scenarioKey) {
+            const metrics = {
+                'black-friday': { errorRate: '5%', latency: '3x', affectedServices: '3', duration: '15m' },
+                'payment-failures': { errorRate: '15%', latency: '2x', affectedServices: '2', duration: '20m' },
+                'search-degradation': { errorRate: '3%', latency: '5x', affectedServices: '1', duration: '30m' },
+                'cart-abandonment': { errorRate: '8%', latency: '1.5x', affectedServices: '2', duration: '25m' },
+                'inventory-sync': { errorRate: '6%', latency: '2.5x', affectedServices: '2', duration: '45m' },
+                'recommendation-slow': { errorRate: '2%', latency: '4x', affectedServices: '1', duration: '20m' },
+                'atm-outage': { errorRate: '12%', latency: '3x', affectedServices: '2', duration: '30m' },
+                'fraud-alerts': { errorRate: '4%', latency: '2x', affectedServices: '2', duration: '40m' },
+                'db-pool-exhaustion': { errorRate: '20%', latency: '4x', affectedServices: '3', duration: '25m' },
+                'mobile-login-fail': { errorRate: '25%', latency: '1.5x', affectedServices: '2', duration: '15m' },
+                'payment-delays': { errorRate: '5%', latency: '6x', affectedServices: '2', duration: '35m' },
+                'regulatory-report': { errorRate: '3%', latency: '2.5x', affectedServices: '2', duration: '60m' },
+                'claims-backlog': { errorRate: '4%', latency: '3.5x', affectedServices: '2', duration: '45m' },
+                'renewal-rush': { errorRate: '6%', latency: '2.5x', affectedServices: '3', duration: '50m' },
+                'underwriting-overload': { errorRate: '5%', latency: '4x', affectedServices: '3', duration: '30m' },
+                'disaster-claims': { errorRate: '8%', latency: '3x', affectedServices: '4', duration: '120m' },
+                'matchmaking-delays': { errorRate: '4%', latency: '5x', affectedServices: '2', duration: '20m' },
+                'ddos-attack': { errorRate: '30%', latency: '8x', affectedServices: '3', duration: '35m' },
+                'season-launch': { errorRate: '7%', latency: '4x', affectedServices: '4', duration: '40m' },
+                'store-issues': { errorRate: '15%', latency: '2x', affectedServices: '3', duration: '25m' },
+                'ban-wave': { errorRate: '3%', latency: '2.5x', affectedServices: '3', duration: '30m' },
+                'ehr-slowdown': { errorRate: '6%', latency: '4.5x', affectedServices: '3', duration: '35m' },
+                'appointment-surge': { errorRate: '5%', latency: '3x', affectedServices: '3', duration: '45m' },
+                'lab-delays': { errorRate: '8%', latency: '5x', affectedServices: '3', duration: '50m' },
+                'emergency-alert': { errorRate: '2%', latency: '2x', affectedServices: '3', duration: '15m' },
+                'holiday-rush': { errorRate: '6%', latency: '3.5x', affectedServices: '4', duration: '60m' },
+                'weather-delays': { errorRate: '10%', latency: '4x', affectedServices: '4', duration: '90m' },
+                'warehouse-automation': { errorRate: '12%', latency: '3x', affectedServices: '3', duration: '40m' },
+                'route-failures': { errorRate: '15%', latency: '6x', affectedServices: '2', duration: '35m' },
+                'last-mile-surge': { errorRate: '8%', latency: '2.5x', affectedServices: '4', duration: '30m' }
+            };
+            return metrics[scenarioKey] || { errorRate: '5%', latency: '2-3x', affectedServices: '2-3', duration: '20-30m' };
+        }
+        
+        function getDemoScript(details) {
+            const scripts = {
+                'black-friday': `
+                    <li>"We're simulating Black Friday - our peak traffic event of the year"</li>
+                    <li>"Traffic has increased 10x, and we're starting to see performance degradation"</li>
+                    <li>"Notice in the Service Map: search-service and recommendation-engine are showing red"</li>
+                    <li>"Error rate has climbed to 5% - normally we're at 2%"</li>
+                    <li>"Let's look at a trace to see where the bottleneck is..."</li>
+                    <li>"You can see the search query is taking 800ms instead of the usual 80ms"</li>
+                    <li>"With Elastic Observability, we can quickly identify and alert on these issues"</li>
+                `,
+                'payment-failures': `
+                    <li>"Our payment gateway is experiencing intermittent failures"</li>
+                    <li>"15% of transactions are failing - this is critical for revenue"</li>
+                    <li>"The Service Map shows payment-gateway in red with high error rates"</li>
+                    <li>"We can correlate logs, traces, and metrics to understand the root cause"</li>
+                    <li>"Notice how the errors cascade to checkout-service"</li>
+                    <li>"This is where distributed tracing really shines - seeing the full request path"</li>
+                `,
+                'ddos-attack': `
+                    <li>"We're under a DDoS attack - malicious traffic is overwhelming our servers"</li>
+                    <li>"Error rate has spiked to 30% and latency is 8x normal"</li>
+                    <li>"The Service Map shows game-server, authentication-service, and session-management all impacted"</li>
+                    <li>"We can use Elastic to detect these patterns and trigger automated responses"</li>
+                    <li>"Let's look at the logs to see the attack signatures..."</li>
+                    <li>"With ML-powered anomaly detection, we can catch these attacks early"</li>
+                `,
+                'atm-outage': `
+                    <li>"ATMs across the northeast region can't connect to core banking systems"</li>
+                    <li>"This is a critical P1 incident affecting customer access to their money"</li>
+                    <li>"Error rate jumped to 12% and latency is 3x normal"</li>
+                    <li>"The Service Map shows transaction-service and account-service are red"</li>
+                    <li>"Let's trace a failed ATM transaction to find the root cause"</li>
+                    <li>"Logs reveal 'Connection timeout to core banking' - there's our smoking gun"</li>
+                `,
+                'db-pool-exhaustion': `
+                    <li>"Database connection pool is exhausted - all connections in use"</li>
+                    <li>"20% error rate - this is cascading across multiple services"</li>
+                    <li>"Every service that talks to the database is timing out"</li>
+                    <li>"Notice the pattern in the Service Map - all DB-dependent services are red"</li>
+                    <li>"Traces show requests waiting indefinitely for a connection"</li>
+                    <li>"This is a classic example where observability saves hours of troubleshooting"</li>
+                `,
+                'ehr-slowdown': `
+                    <li>"Physicians are reporting slow access to patient records"</li>
+                    <li>"EHR system latency is 4.5x normal - impacting patient care"</li>
+                    <li>"6% error rate on critical health record lookups"</li>
+                    <li>"The Service Map shows ehr-service, patient-monitoring, and prescription-service affected"</li>
+                    <li>"In healthcare, every second matters - this is urgent"</li>
+                    <li>"Elastic helps us maintain the reliability healthcare demands"</li>
+                `
+            };
+            
+            if (scripts[details.key]) {
+                return scripts[details.key];
+            }
+            
+            // Generic script for scenarios without specific scripts
+            return `
+                <li>"We're experiencing: ${details.description}"</li>
+                <li>"Let's examine the Service Map to see which services are affected"</li>
+                <li>"Notice the error rates and latency metrics for each service"</li>
+                <li>"We can drill into individual traces to see the complete request flow"</li>
+                <li>"Elastic Observability gives us full visibility across all our microservices"</li>
+                <li>"This helps us quickly diagnose and resolve production issues"</li>
+            `;
+        }
+        
+        function getServiceCount() {
+            const counts = {
+                'ecommerce': 13,
+                'banking': 17,
+                'insurance': 16,
+                'gaming': 18,
+                'healthcare': 17,
+                'logistics': 18
+            };
+            return counts[selectedIndustry] || 15;
+        }
+    </script>
+</body>
+</html>
